@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Landing Page</title>
+    <!-- Preload Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400&display=swap" as="style">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #0c0c1e;
+            --star-color: #ffffff;
+            --text-color: #ecf0f1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            perspective: 1000px;
+        }
+        
+        #background-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .container {
+            font-family: "Fira Code", Arial ,sans-serif;
+            background-color: rgba(12, 12, 30, 0.8);
+            padding: 3rem;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            backdrop-filter: blur(10px);
+            transform: translateZ(50px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+
+        .bio {
+            margin: 1.5rem 0;
+            line-height: 1.6;
+            color: #b0b0d0;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .social-links a {
+            color: #8080c0;
+            text-decoration: none;
+            font-size: 1.5rem;
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+
+        .social-links a:hover {
+            transform: scale(1.2);
+            color: #ffffff;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="background-canvas"></canvas>
+    
+    <div class="container">
+        <h1>Pedro Gon&#231;alves</h1>
+        <p class="bio">
+            Frontend Developer 🇵🇹
+            <br>    
+            Passionate about creating innovative solutions and exploring the intersection of technology and design.
+        </p>
+        <div class="social-links">
+            <a href="https://github.com/pjgoncalvez/" target="_blank">GitHub</a>
+            <a href="https://www.linkedin.com/in/pedrojgoncalves/" target="_blank">LinkedIn</a>
+            <a href="https://x.com/pjgoncalves" target="_blank">Twitter</a>
+        </div>
+    </div>
+
+    <script>
+        // Canvas and context setup
+        const canvas = document.getElementById('background-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configuration
+        const CONFIG = {
+            starCount: 200,
+            backgroundColor: 'rgba(12, 12, 30, 0.1)'
+        };
+
+        // Star creation function
+        function createStar(x, y) {
+            return {
+                x: x,
+                y: y,
+                size: Math.random() * 2,
+                speedX: 0,
+                speedY: 0,
+                opacity: Math.random(),
+                maxOpacity: Math.random() * 0.7 + 0.3,
+                twinkleSpeed: Math.random() * 0.01 + 0.005,
+                opacityDirection: 1,
+                
+                update(canvasWidth, canvasHeight) {
+                    // Twinkling effect
+                    this.opacity += this.twinkleSpeed * this.opacityDirection;
+                    
+                    if (this.opacity > this.maxOpacity) {
+                        this.opacityDirection = -1;
+                    } else if (this.opacity < 0.1) {
+                        this.opacityDirection = 1;
+                    }
+
+                    // Subtle drift
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+
+                    // Wrap around screen
+                    if (this.x < 0) this.x = canvasWidth;
+                    if (this.x > canvasWidth) this.x = 0;
+                    if (this.y < 0) this.y = canvasHeight;
+                    if (this.y > canvasHeight) this.y = 0;
+                },
+
+                draw(ctx) {
+                    ctx.beginPath();
+                    ctx.globalAlpha = this.opacity;
+                    ctx.fillStyle = 'white';
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+            };
+        }
+
+        // Stars management
+        const StarsManager = {
+            stars: [],
+
+            init(canvasWidth, canvasHeight) {
+                this.stars = Array.from({ length: CONFIG.starCount }, () => 
+                    createStar(
+                        Math.random() * canvasWidth, 
+                        Math.random() * canvasHeight
+                    )
+                );
+            },
+
+            update(canvasWidth, canvasHeight) {
+                this.stars.forEach(star => star.update(canvasWidth, canvasHeight));
+            },
+
+            draw(ctx) {
+                this.stars.forEach(star => star.draw(ctx));
+            },
+
+            addShootingStar(x, y) {
+                const shootingStar = createStar(x, y);
+                shootingStar.size = Math.random() * 3 + 2;
+                shootingStar.speedX = Math.random() * 10 - 5;
+                shootingStar.speedY = Math.random() * 10 - 5;
+                shootingStar.opacity = 1;
+                this.stars.push(shootingStar);
+            },
+
+            updateStarMovement(mouseX, mouseY) {
+                this.stars.forEach(star => {
+                    const dx = mouseX - star.x;
+                    const dy = mouseY - star.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 100) {
+                        star.speedX = dx * 0.001;
+                        star.speedY = dy * 0.001;
+                    } else {
+                        star.speedX = 0;
+                        star.speedY = 0;
+                    }
+                });
+            }
+        };
+
+        // Animation loop
+        function animate() {
+            // Clear canvas with a trailing effect
+            ctx.fillStyle = CONFIG.backgroundColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Update and draw stars
+            StarsManager.update(canvas.width, canvas.height);
+            StarsManager.draw(ctx);
+
+            requestAnimationFrame(animate);
+        }
+
+        // Event Listeners
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            StarsManager.init(canvas.width, canvas.height);
+        }
+
+        canvas.addEventListener('click', (event) => {
+            StarsManager.addShootingStar(event.clientX, event.clientY);
+        });
+
+        canvas.addEventListener('mousemove', (event) => {
+            StarsManager.updateStarMovement(event.clientX, event.clientY);
+        });
+
+        // Initial setup
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        animate();
+    </script>
+</body>
+</html>
